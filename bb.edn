@@ -129,6 +129,14 @@
                       (println "Then run `sudo ldconfig` so the linker sees libraylib.so."))))
               (System/exit 1)))))
 
+    (defn lib-stale?
+      "Missing, or older than the sources it is compiled from."
+      []
+      (or (not (lib-built?))
+          (seq (fs/modified-since lib-path
+                                  [(str repo-root "/vendor/raygui.h")
+                                   (str repo-root "/vendor/raygui_impl.c")]))))
+
     (defn ensure-lib!
       "Build the native library if it is missing, so a fresh clone can run an
        example without a separate setup step."
@@ -166,8 +174,8 @@
         ["clojure" "-Sdeps" kondo-dep "-M" "-m" "clj-kondo.main"])))
 
   lib:build
-  {:doc "Compile vendor/raygui.h into lib/libraygui.{dylib,so}"
-   :task (build-lib!)}
+  {:doc "Compile vendor/raygui.h into lib/libraygui.{dylib,so} (skipped when up to date)"
+   :task (if (lib-stale?) (build-lib!) (println (str "up to date: " lib-path)))}
 
   lib:check
   {:doc "Is raylib installed? Is libraygui built? (read-only)"
