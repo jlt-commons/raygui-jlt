@@ -22,6 +22,19 @@ Every example task builds the native library automatically if it is missing, so 
 practice `bb basic-controls` alone is enough on a fresh clone: it runs `bb lib:build`
 for you the first time.
 
+## Using the bindings from another project
+
+Add raygui-jlt as a git dep:
+
+```clojure
+{:deps {io.github.jlt-commons/raygui-jlt {:git/url "https://github.com/jlt-commons/raygui-jlt"
+                                          :git/sha "..."}}}
+```
+
+The first run builds `libraygui` in the dependency's checkout (needs jolt 0.8.26+
+for `:build` in `:jolt/native`, a C compiler and raylib's headers). With an older
+jolt, run `bb lib:build` in a clone and depend on it with `:local/root`.
+
 ## Why there is a build step at all
 
 Unlike raylib, raygui is header-only: there is no `libraygui` to install and no

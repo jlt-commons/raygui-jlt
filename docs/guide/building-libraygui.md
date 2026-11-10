@@ -29,7 +29,10 @@ cc -O2 -dynamiclib -fPIC -DBUILD_LIBTYPE_SHARED \
 ```
 
 The Homebrew include/lib paths are named explicitly because they aren't on the
-compiler's default search path. `bb lib:check` reports whether raylib is installed
+compiler's default search path. The task skips the compile when the library is
+newer than `vendor/raygui.h` and `vendor/raygui_impl.c`; jolt can run it too
+(`jolt lib:build`), which is what a jolt with `:build` support does when
+raygui-jlt is a git dependency and the library is missing. `bb lib:check` reports whether raylib is installed
 and whether `libraygui` is already built, with the fix for each; every example task
 runs `bb lib:build` automatically if the library is missing, so a fresh clone needs
 no separate setup step.
