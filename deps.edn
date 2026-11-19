@@ -11,15 +11,18 @@
  ;; or your distro's raylib package. Chez's dlopen default search path does not
  ;; include Homebrew's lib dir, so the absolute path is listed first.
  ;;
- ;; raygui is built by `bb lib:build` from the vendored header, because raygui
- ;; is header-only and ships no shared library. The path is repo-relative, so
- ;; examples must be run from the repo root (which every `bb` task does).
+ ;; raygui is built by `jolt lib:build` (or `bb lib:build`) from the vendored
+ ;; header, because raygui is header-only and ships no shared library. :build
+ ;; names that task, so a consumer pulling raygui-jlt as a git dep gets the
+ ;; library built in the checkout on first use. The path is repo-relative, so
+ ;; examples must be run from the repo root (which every task does).
  :jolt/native [{:name "raylib"
                 :darwin ["/opt/homebrew/lib/libraylib.dylib" "libraylib.dylib"]
                 :linux  ["libraylib.so.6" "libraylib.so"]}
                {:name "raygui"
                 :darwin ["lib/libraygui.dylib"]
-                :linux  ["lib/libraygui.so"]}]
+                :linux  ["lib/libraygui.so"]
+                :build "lib:build"}]
 
  :aliases {:test   {:extra-paths ["test"]
                     :main-opts   ["-m" "net.b12n.raygui-jlt.test-runner"]}   ; unit suite: ffi/write argument order
