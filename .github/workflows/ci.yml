@@ -42,7 +42,9 @@ env:
   # repo changed and not that jolt did. Floor is 0.7.23, where
   # `[:by-value [:struct ...]]` landed, which every Rectangle-taking binding
   # depends on. Verified locally against the full suite before pinning.
-  JOLT_VERSION: "0.8.24"
+  # A workflow_dispatch jolt-version input overrides it, and is reflected here
+  # too so the job log's env blocks name the version that actually ran.
+  JOLT_VERSION: ${{ inputs.jolt-version || '0.8.24' }}
   # Pinned so a red build means this repo changed, not raylib.
   RAYLIB_REF: "6.0"
 
@@ -253,6 +255,11 @@ jobs:
 
       # Formatting is owned by clojure-lsp, not cljfmt. See the note at the
       # top of bb.edn for why only one formatter runs against src.
+      #
+      # This step and the next skip clojure-lsp's classpath discovery (see
+      # lsp-no-classpath in bb.edn). That lookup was this workflow's only
+      # Maven Central fetch, and it failed with 429 whenever the fleet check
+      # built several projects at once (#8).
       - name: Formatting
         run: bb lsp:format-check
 

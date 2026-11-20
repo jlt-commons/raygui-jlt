@@ -171,7 +171,16 @@
       []
       (if (fs/which "clj-kondo")
         ["clj-kondo"]
-        ["clojure" "-Sdeps" kondo-dep "-M" "-m" "clj-kondo.main"])))
+        ["clojure" "-Sdeps" kondo-dep "-M" "-m" "clj-kondo.main"]))
+
+    ;; Passed to `clojure-lsp format` and `clean-ns`. With no project specs,
+    ;; clojure-lsp skips classpath discovery (`clojure -A:test:dev -Spath`)
+    ;; and analyses its default source paths instead. Neither check reads the
+    ;; classpath: on this repo both report the same thing with and without it.
+    ;; The point is CI, where that lookup was the only Maven Central fetch and
+    ;; failed with 429 when several jlt-commons projects built at once
+    ;; (jlt-commons/raygui-jlt#8).
+    (def lsp-no-classpath ["--settings" "{:project-specs []}"]))
 
   lib:build
   {:doc "Compile vendor/raygui.h into lib/libraygui.{dylib,so} (skipped when up to date)"
@@ -484,19 +493,19 @@
 
   lsp:format
   {:doc "Reformat all Clojure files (clojure-lsp)"
-   :task (shell "clojure-lsp" "format")}
+   :task (apply shell "clojure-lsp" "format" lsp-no-classpath)}
 
   lsp:format-check
   {:doc "Check formatting — dry run"
-   :task (shell "clojure-lsp" "format" "--dry")}
+   :task (apply shell "clojure-lsp" "format" "--dry" lsp-no-classpath)}
 
   lsp:clean-ns
   {:doc "Clean + organize ns forms (clojure-lsp)"
-   :task (shell "clojure-lsp" "clean-ns")}
+   :task (apply shell "clojure-lsp" "clean-ns" lsp-no-classpath)}
 
   lsp:clean-ns-check
   {:doc "Check ns forms — dry run"
-   :task (shell "clojure-lsp" "clean-ns" "--dry")}
+   :task (apply shell "clojure-lsp" "clean-ns" "--dry" lsp-no-classpath)}
 
   lsp:diagnostics
   {:doc "clojure-lsp diagnostics"
@@ -509,9 +518,9 @@
   {:doc "All LSP checks (format + clean-ns + diagnostics) — dry run"
    :task (do (println "-> LSP checks (dry run)")
              (println "-> format --dry")
-             (shell {:continue true} "clojure-lsp" "format" "--dry")
+             (apply shell {:continue true} "clojure-lsp" "format" "--dry" lsp-no-classpath)
              (println "-> clean-ns --dry")
-             (shell {:continue true} "clojure-lsp" "clean-ns" "--dry")
+             (apply shell {:continue true} "clojure-lsp" "clean-ns" "--dry" lsp-no-classpath)
              (println "-> diagnostics")
              (shell {:continue true} "clojure-lsp" "diagnostics")
              (println "OK LSP checks done (see above for any issues)"))}
@@ -520,9 +529,9 @@
   {:doc "Auto-fix: format + clean-ns (mutating)"
    :task (do (println "-> LSP auto-fix")
              (println "-> format")
-             (shell {:continue true} "clojure-lsp" "format")
+             (apply shell {:continue true} "clojure-lsp" "format" lsp-no-classpath)
              (println "-> clean-ns")
-             (shell {:continue true} "clojure-lsp" "clean-ns")
+             (apply shell {:continue true} "clojure-lsp" "clean-ns" lsp-no-classpath)
              (println "OK auto-fixes applied — run bb lsp:diagnostics + bb check to confirm"))}
 
   hooks:install
